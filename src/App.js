@@ -6,14 +6,11 @@ import ImageLinkForm from './Components/ImageLinkForm/ImageLinkForm';
 import Rank from './Components/Rank/Rank';
 import 'tachyons';
 import Particles from 'react-particles-js';
-import Clarifai from 'clarifai';
 import FaceRecognition from './Components/FaceRecognition/FaceRecognition';
 import SignIn from './Components/SignIn/SignIn';
 import Register from './Components/Register/Register';
 
-const app = new Clarifai.App({
- apiKey: process.env.API_CLARIFAI
-});
+
 
 const particlesOptions = {
   particles: {
@@ -83,28 +80,34 @@ class App extends Component {
   }
 
   onSubmit = () => {
-    this.setState({imageUrl: this.state.input})
-    app.models.predict(
-      Clarifai.FACE_DETECT_MODEL, 
-      this.state.input)
-    .then(response => {
-      if (response) {
-           fetch('https://pacific-harbor-90607.herokuapp.com/image', {
+    this.setState({imageUrl: this.state.input});
+      fetch('https://pacific-harbor-90607.herokuapp.com/imageurl', {
+        method: 'post',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          input: this.state.input
+        })
+      })
+      .then(response => response.json())
+      .then(response => {
+        if (response) {
+          fetch('https://pacific-harbor-90607.herokuapp.com/image', {
             method: 'put',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({
-              id: this.state.user.id           
+              id: this.state.user.id
+            })
           })
-        })
-           .then(response => response.json())
-           .then(count => {
-              this.setState(Object.assign(this.state.user, { entries: count }))
-           })
-           .catch(console.log)
-      }
-    this.displayFaceBox(this.calculateFaceLocation(response));      
-    })     
-    .catch(err => console.log(err));
+            .then(response => response.json())
+            .then(count => {
+              this.setState(Object.assign(this.state.user, { entries: count}))
+            })
+            .catch(console.log)
+
+        }
+        this.displayFaceBox(this.calculateFaceLocation(response))
+      })
+      .catch(err => console.log(err));
   }
 
   onRouteChange = (route) => {
